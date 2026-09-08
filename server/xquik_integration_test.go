@@ -21,7 +21,7 @@ func TestIntegrationXquikPartialReportKeepsWatermark(t *testing.T) {
 			t.Fatal("must not start a paid run")
 		}
 		if strings.HasSuffix(r.URL.Path, "/run-report") {
-			w.Write([]byte(`{"completionReason":"partial_failure","failedSubtargets":1}`))
+			w.Write([]byte(`{"results":{"completionReason":"partial_failure","failedSubtargets":1}}`))
 			return
 		}
 		if r.URL.Path == "/datasets/dataset/items" {
@@ -54,4 +54,22 @@ func TestIntegrationXquikPartialReportKeepsWatermark(t *testing.T) {
 	if status != "partial" || watermark != nil {
 		t.Fatal(status, watermark)
 	}
+	// Correcting an earlier report parse must resume the same dataset, without a new run.
+	warning = reportWarning(M{"outcome": "partial", "results": M{"completionReason": "source_exhausted", "failedSubtargets": float64(0)}})
+	if warning != "" {
+		t.Fatal(warning)
+	}
+	if _, e = a.db.Exec(ctx, "UPDATE jobs SET upstream_error=$1,status='importing' WHERE id='job'", warning); e != nil {
+		t.Fatal(e)
+	}
+	if e = a.importDatasetPage(ctx, "mock-token", "job", "dataset", Source{ID: "source"}, 0, &started); e != nil {
+		t.Fatal(e)
+	}
+	if e = a.db.QueryRow(ctx, "SELECT j.status,s.watermark FROM jobs j JOIN sources s ON s.id=j.source_id WHERE j.id='job'").Scan(&status, &watermark); e != nil {
+		t.Fatal(e)
+	}
+	if status != "succeeded" || watermark == nil {
+		t.Fatal(status, watermark)
+	}
+
 }
