@@ -2,6 +2,20 @@
 
 Go + PostgreSQL 服务端、React Web 与管理后台。浅色界面以提供的四张 Web 原型为布局基准，含首页瀑布流、详情多图预览、排行榜、个人中心及响应式布局。
 
+## 设计原型
+
+### Web 端
+
+首页、壁纸详情、排行榜和个人中心的设计参考。
+
+![壁纸星球 Web 端设计原型](docs/images/web-prototype.png)
+
+### App 端（规划中）
+
+App 后续开发，当前移动浏览器的响应式界面参考此原型。
+
+![壁纸星球 App 端设计原型](docs/images/app-prototype.png)
+
 ## 本机入口
 
 - 正式站点：<http://localhost:8080>；后台：<http://localhost:8080/admin>
