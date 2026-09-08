@@ -59,7 +59,7 @@ func (a *App) wallpapers(c *gin.Context) {
 		return
 	}
 	filters := []string{"w.status='published'", "EXISTS(SELECT 1 FROM media m WHERE m.wallpaper_id=w.id)"}
-	if c.Query("featured") == "prefer" {
+	if c.Query("featured") == "prefer" && c.Query("topic") == "" {
 		filters = append(filters, "(w.featured OR NOT EXISTS(SELECT 1 FROM wallpapers f WHERE f.featured AND f.status='published' AND EXISTS(SELECT 1 FROM media fm WHERE fm.wallpaper_id=f.id)))")
 	}
 	if c.Query("featured") == "true" {
@@ -182,7 +182,7 @@ func (a *App) interaction(c *gin.Context) {
 	}
 }
 
-const entityJSON = `e.data || jsonb_build_object('id',e.id,'kind',e.kind,'subscribed',EXISTS(SELECT 1 FROM subscriptions s WHERE s.entity_id=e.id AND s.user_id=$1),'subscribers',(SELECT count(*) FROM subscriptions s WHERE s.entity_id=e.id),'count',(SELECT count(*) FROM wallpapers w WHERE w.status='published' AND (w.author_id=e.id OR w.channel_id=e.id OR e.id=ANY(w.topic_ids))))`
+const entityJSON = `e.data || jsonb_build_object('cover',COALESCE(NULLIF(e.data->>'cover',''),(SELECT '/media/'||m.thumbnail_key FROM wallpapers w JOIN media m ON m.wallpaper_id=w.id WHERE w.status='published' AND (w.author_id=e.id OR w.channel_id=e.id OR e.id=ANY(w.topic_ids)) ORDER BY w.published_at DESC,w.id DESC,m.position LIMIT 1),''),'id',e.id,'kind',e.kind,'subscribed',EXISTS(SELECT 1 FROM subscriptions s WHERE s.entity_id=e.id AND s.user_id=$1),'subscribers',(SELECT count(*) FROM subscriptions s WHERE s.entity_id=e.id),'count',(SELECT count(*) FROM wallpapers w WHERE w.status='published' AND (w.author_id=e.id OR w.channel_id=e.id OR e.id=ANY(w.topic_ids))))`
 
 func (a *App) entities(c *gin.Context) {
 	kind := c.Query("kind")

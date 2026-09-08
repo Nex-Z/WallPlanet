@@ -141,7 +141,6 @@ export function HomePage() {
           />
           <WallpaperGrid
             filters={{
-              featured: "prefer",
               topic: p.get("topic") || "",
               orientation: p.get("orientation") || "",
             }}

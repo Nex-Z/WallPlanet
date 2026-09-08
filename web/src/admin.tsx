@@ -1327,13 +1327,29 @@ function EntityEditor({
           />
         </label>
         <label>
-          封面地址（站内图片）
+          封面地址（网络或站内图片）
           <input
             value={v.cover || ""}
-            placeholder="/media/... 或 /assets/..."
+            placeholder="https://... 或 /media/...；留空自动选择壁纸"
             onChange={(e) => setV({ ...v, cover: e.target.value })}
           />
         </label>
+        <p className="muted small">
+          封面支持 HTTP / HTTPS
+          图片直链；留空时自动使用关联的已发布壁纸。网络图片需允许外站访问。
+        </p>
+        {v.cover && (
+          <SmartImage
+            src={v.cover}
+            alt="封面预览"
+            style={{
+              width: "100%",
+              height: 150,
+              objectFit: "cover",
+              borderRadius: 12,
+            }}
+          />
+        )}
         <label>
           头像地址
           <input

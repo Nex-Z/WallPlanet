@@ -1,3 +1,4 @@
+import { AutoLoadMore } from "./infinite";
 import { useEffect, useState, useRef, type ReactNode } from "react";
 import { Link, NavLink, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -390,7 +391,7 @@ export function WallpaperGrid({
     getNextPageParam: (p) => p.nextCursor || undefined,
   });
   if (query.isLoading) return <Loading />;
-  if (query.error)
+  if (query.error && !query.data)
     return <ErrorState error={query.error} retry={() => query.refetch()} />;
   const items = query.data?.pages.flatMap((p) => p.items) || [];
   if (!items.length)
@@ -403,20 +404,13 @@ export function WallpaperGrid({
   return (
     <>
       <Masonry items={items} />
-      {query.hasNextPage && (
-        <div className="load-more">
-          <button
-            className="secondary"
-            disabled={query.isFetchingNextPage}
-            onClick={() => query.fetchNextPage()}
-          >
-            {query.isFetchingNextPage ? (
-              <LoaderCircle className="spin" size={16} />
-            ) : null}
-            加载更多壁纸
-          </button>
-        </div>
-      )}
+      <AutoLoadMore
+        key={JSON.stringify(filters)}
+        hasMore={!!query.hasNextPage}
+        busy={query.isFetching}
+        error={query.isFetchNextPageError}
+        load={() => query.fetchNextPage()}
+      />
     </>
   );
 }

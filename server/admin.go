@@ -301,7 +301,7 @@ func (a *App) saveEntity(c *gin.Context) {
 		Avatar      string `json:"avatar"`
 		Featured    bool   `json:"featured"`
 	}
-	if c.ShouldBindJSON(&in) != nil || strings.TrimSpace(in.Name) == "" || len(in.Name) > 100 || len(in.Description) > 500 || !validImageRef(in.Cover) || (!validImageRef(in.Avatar) && allowedMediaURL(in.Avatar) != nil) || (in.Kind != "topic" && in.Kind != "author" && in.Kind != "channel") {
+	if c.ShouldBindJSON(&in) != nil || strings.TrimSpace(in.Name) == "" || len(in.Name) > 100 || len(in.Description) > 500 || !validCoverRef(in.Cover) || (!validImageRef(in.Avatar) && allowedMediaURL(in.Avatar) != nil) || (in.Kind != "topic" && in.Kind != "author" && in.Kind != "channel") {
 		fail(c, 400, "名称、类型或图片地址不正确")
 		return
 	}
