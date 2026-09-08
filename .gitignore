@@ -1,0 +1,14 @@
+.env
+data/
+server/wallplanet.exe
+server/wallplanet
+web/node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+artifacts/
+*.log
+*.tsbuildinfo
+releases/
+.env.*
+!.env.example

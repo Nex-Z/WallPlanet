@@ -1,0 +1,25 @@
+services:
+  app:
+    image: wallplanet:${RELEASE_TAG:?Set RELEASE_TAG}
+    restart: unless-stopped
+    network_mode: host
+    env_file: .env
+    environment:
+      APP_ADDR: ":${DEPLOY_PORT:-18082}"
+      APP_ORIGIN: "${DEPLOY_ORIGIN:?Set DEPLOY_ORIGIN}"
+      DATA_DIR: /data
+      WEB_DIR: /app/web
+      DEMO_MODE: "false"
+      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:${DEPLOY_PORT:-18082}/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

@@ -1,0 +1,8 @@
+FROM alpine:3.22
+WORKDIR /app
+COPY --chmod=755 wallplanet /app/wallplanet
+COPY web /app/web
+USER 1000:1001
+ENV APP_ADDR=:8080 DATA_DIR=/data WEB_DIR=/app/web
+EXPOSE 8080
+ENTRYPOINT ["/app/wallplanet", "serve"]

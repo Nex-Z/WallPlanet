@@ -1,0 +1,1 @@
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS retry_item_id text NOT NULL DEFAULT '';
