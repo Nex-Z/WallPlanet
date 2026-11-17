@@ -49,6 +49,7 @@ import {
   Subscribe,
   WallpaperGrid,
 } from "./components";
+const xrwChannelPath = "/channels/xrw-album";
 type Banner = { title: string; subtitle: string; image: string; href: string };
 function Hero() {
   const reducedMotion = useReducedMotion();
@@ -126,8 +127,33 @@ function Hero() {
     </section>
   );
 }
+function ArchiveSort() {
+  const [p, setP] = useSearchParams();
+  return (
+    <label className="orientation source-filter">
+      <select
+        aria-label="按收录时间排序"
+        value={p.get("sort") === "oldest" ? "oldest" : "newest"}
+        onChange={(e) => {
+          const sort = e.target.value;
+          setP((current) => {
+            const next = new URLSearchParams(current);
+            if (sort === "oldest") next.set("sort", sort);
+            else next.delete("sort");
+            return next;
+          });
+        }}
+      >
+        <option value="newest">最新收录</option>
+        <option value="oldest">最早收录</option>
+      </select>
+    </label>
+  );
+}
+
 export function HomePage() {
   const [p] = useSearchParams();
+  const channel = p.get("channel") || "";
   return (
     <>
       <Hero />
@@ -137,12 +163,20 @@ export function HomePage() {
           <SectionTitle
             title="精选壁纸"
             subtitle="发现世界的不同美好"
-            more="/discover"
-          />
+            more={
+              channel === "xrw-album"
+                ? xrwChannelPath + "?view=models"
+                : "/discover"
+            }
+          >
+            <ArchiveSort />
+          </SectionTitle>
           <WallpaperGrid
             filters={{
               topic: p.get("topic") || "",
               orientation: p.get("orientation") || "",
+              channel,
+              sort: p.get("sort") === "oldest" ? "oldest" : "newest",
             }}
           />
         </div>
@@ -219,6 +253,7 @@ export function DiscoverPage() {
           topic: p.get("topic") || "",
           tag: p.get("tag") || "",
           orientation: p.get("orientation") || "",
+          channel: p.get("channel") || "",
           scope: p.get("scope") || "",
         }}
         emptyText={
@@ -317,7 +352,13 @@ export function DetailPage() {
       <div className="breadcrumb">
         <Link to="/">首页</Link>
         <ChevronRight size={13} />
-        <Link to={"/discover?topic=" + w.topicIds[0]}>精选壁纸</Link>
+        {img.external ? (
+          <Link to={xrwChannelPath}>xrw-album 相册</Link>
+        ) : (
+          <Link to={"/discover?" + params({ topic: w.topicIds[0] })}>
+            精选壁纸
+          </Link>
+        )}
         <ChevronRight size={13} />
         <span>{w.title}</span>
       </div>
@@ -354,7 +395,12 @@ export function DetailPage() {
                 className={selected === i ? "selected" : ""}
                 onClick={() => setSelected(i)}
               >
-                <SmartImage src={m.thumbnail} alt="" />
+                <SmartImage
+                  src={m.thumbnail}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
               </button>
             ))}
           </div>
@@ -363,20 +409,26 @@ export function DetailPage() {
           <h1>
             {w.title}{" "}
             <span className="quality-badge">
-              {Math.max(img.width, img.height) >= 3840 ? "4K" : "HD"}
+              {img.external
+                ? "外部图源"
+                : Math.max(img.width, img.height) >= 3840
+                  ? "4K"
+                  : "HD"}
             </span>
           </h1>
           <p className="detail-description">{w.description}</p>
-          <div className="detail-author">
-            <Link to={"/authors/" + w.author.id}>
-              <Avatar entity={w.author} />
-              <span>
-                <strong>{w.author.name}</strong>
-                <small>{number(author.data?.subscribers)} 位关注者</small>
-              </span>
-            </Link>
-            {author.data && <Subscribe entity={author.data} />}
-          </div>
+          {w.author.id && (
+            <div className="detail-author">
+              <Link to={"/authors/" + w.author.id}>
+                <Avatar entity={w.author} />
+                <span>
+                  <strong>{w.author.name}</strong>
+                  <small>{number(author.data?.subscribers)} 位关注者</small>
+                </span>
+              </Link>
+              {author.data && <Subscribe entity={author.data} />}
+            </div>
+          )}
           <dl className="metadata">
             <div>
               <dt>
@@ -387,30 +439,61 @@ export function DetailPage() {
                 <Link to={"/channels/" + w.channel.id}>{w.channel.name}</Link>
               </dd>
             </div>
-            <div>
-              <dt>
-                <Image size={15} />
-                分辨率
-              </dt>
-              <dd>
-                {img.width} × {img.height}
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <HardDrive size={15} />
-                文件大小
-              </dt>
-              <dd>{(img.bytes / 1024 / 1024).toFixed(1)} MB</dd>
-            </div>
+            {!img.external && (
+              <div>
+                <dt>
+                  <Image size={15} />
+                  分辨率
+                </dt>
+                <dd>
+                  {img.width} × {img.height}
+                </dd>
+              </div>
+            )}
+            {!img.external && (
+              <div>
+                <dt>
+                  <HardDrive size={15} />
+                  文件大小
+                </dt>
+                <dd>{(img.bytes / 1024 / 1024).toFixed(1)} MB</dd>
+              </div>
+            )}
             <div>
               <dt>
                 <CalendarDays size={15} />
-                发布于
+                {img.external ? "收录于" : "发布于"}
               </dt>
-              <dd>{new Date(w.publishedAt).toLocaleDateString("zh-CN")}</dd>
+              <dd>
+                {img.external && w.archivedAt ? (
+                  <time dateTime={w.archivedAt}>
+                    {new Date(w.archivedAt).toLocaleString("zh-CN", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </time>
+                ) : (
+                  new Date(w.publishedAt).toLocaleDateString("zh-CN")
+                )}
+              </dd>
             </div>
           </dl>
+          {img.external && (
+            <div className="tags model-links" aria-label="相册模特">
+              <span>模特</span>
+              {(w.modelNames || []).map((name) => (
+                <Link
+                  key={name}
+                  to={xrwChannelPath + "?" + params({ model: name })}
+                >
+                  {name}
+                </Link>
+              ))}
+              {!w.modelNames?.length && (
+                <Link to={xrwChannelPath + "?view=unclassified"}>未分类</Link>
+              )}
+            </div>
+          )}
           <div className="tags">
             {w.tags.map((t, i) => (
               <Link key={t + i} to={"/discover?tag=" + encodeURIComponent(t)}>
@@ -502,7 +585,7 @@ export function DetailPage() {
           {w.sourceUrl && (
             <div className="source-note">
               <a href={w.sourceUrl} target="_blank" rel="noreferrer">
-                查看 X 原帖 ↗
+                {img.external ? "查看外部索引 ↗" : "查看 X 原帖 ↗"}
               </a>
               {w.sourceMetrics.likes !== undefined && (
                 <span>
@@ -846,6 +929,142 @@ export function EntitiesPage({ kind }: { kind: "author" | "topic" }) {
     </>
   );
 }
+type ModelSummary = { name: string; count: number; cover: string };
+
+function ModelDirectory() {
+  const [search, setSearch] = useState("");
+  const q = search.trim();
+  const query = useInfiniteQuery({
+    queryKey: ["xrw-models", q],
+    initialPageParam: "",
+    queryFn: ({ pageParam }) =>
+      api<Page<ModelSummary>>("/models?" + params({ q, cursor: pageParam })),
+    getNextPageParam: (page) => page.nextCursor || undefined,
+  });
+  const entries = query.data?.pages.flatMap((page) => page.items) || [];
+  return (
+    <section aria-label="模特目录">
+      <label className="model-search">
+        <Search size={16} aria-hidden="true" />
+        <input
+          type="search"
+          aria-label="搜索模特"
+          placeholder="搜索模特"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </label>
+      {query.isLoading ? (
+        <Loading count={6} />
+      ) : query.error ? (
+        <ErrorState error={query.error} retry={() => query.refetch()} />
+      ) : entries.length ? (
+        <ul className="model-directory">
+          {entries.map(({ name, count, cover }) => (
+            <li key={name}>
+              <Link to={xrwChannelPath + "?" + params({ model: name })}>
+                <SmartImage
+                  className="model-cover"
+                  src={cover}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span>
+                  <strong>{name}</strong>
+                  <small>{number(count)} 个相册</small>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Empty title="没有找到模特" text="可以试试其他名字。" />
+      )}
+      {query.hasNextPage && (
+        <div className="load-more">
+          <button
+            className="secondary"
+            disabled={query.isFetchingNextPage}
+            onClick={() => query.fetchNextPage()}
+          >
+            加载更多
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function XrwChannelAlbums() {
+  const [p, setP] = useSearchParams();
+  const model = p.get("model") || "";
+  const view = p.get("view") || "albums";
+  const profile = useQuery({
+    queryKey: ["xrw-model", model],
+    queryFn: () =>
+      api<Page<ModelSummary>>("/models?" + params({ name: model })),
+    select: (page) => page.items[0],
+    enabled: !!model,
+  });
+  const tabs = [
+    ["albums", "全部相册"],
+    ["models", "模特"],
+    ["unclassified", "未分类"],
+  ];
+  return (
+    <>
+      <div className="tabs compact" aria-label="图源分类">
+        {tabs.map(([value, label]) => {
+          const active = model ? value === "models" : value === view;
+          return (
+            <button
+              key={value}
+              className={active ? "active" : ""}
+              aria-pressed={active}
+              onClick={() => setP(value === "albums" ? {} : { view: value })}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+      {!model && view === "models" ? (
+        <ModelDirectory />
+      ) : (
+        <>
+          {model && (
+            <section className="model-profile" aria-label={model + "的相册"}>
+              {profile.data && (
+                <SmartImage
+                  className="model-cover"
+                  src={profile.data.cover}
+                  alt={model + "的相册封面"}
+                />
+              )}
+              <div>
+                <h2>{model}</h2>
+                {profile.data && <p>{number(profile.data.count)} 个相册</p>}
+              </div>
+            </section>
+          )}
+          <div className="album-sort">
+            <ArchiveSort />
+          </div>
+          <WallpaperGrid
+            filters={{
+              channel: "xrw-album",
+              model,
+              unclassified: view === "unclassified" ? "true" : "",
+              sort: p.get("sort") === "oldest" ? "oldest" : "newest",
+            }}
+          />
+        </>
+      )}
+    </>
+  );
+}
+
 export function EntityPage() {
   const { id } = useParams();
   const query = useQuery({
@@ -875,14 +1094,21 @@ export function EntityPage() {
             <h1>{e.name}</h1>
             <p>{e.description}</p>
             <small>
-              {number(e.count)} 张作品 · {number(e.subscribers)} 位订阅者
+              {number(e.count)} {e.id === "xrw-album" ? "个相册" : "张作品"} ·{" "}
+              {number(e.subscribers)} 位订阅者
             </small>
           </div>
           <Subscribe entity={e} />
         </div>
       </div>
-      <SectionTitle title="全部作品" />
-      <WallpaperGrid filters={{ [e.kind]: e.id }} />
+      {e.id === "xrw-album" ? (
+        <XrwChannelAlbums />
+      ) : (
+        <>
+          <SectionTitle title="全部作品" />
+          <WallpaperGrid filters={{ [e.kind]: e.id }} />
+        </>
+      )}
     </>
   );
 }

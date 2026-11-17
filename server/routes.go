@@ -26,6 +26,7 @@ func (a *App) routes() *gin.Engine {
 	api.POST("/auth/login", a.auth)
 	api.POST("/auth/logout", requireUser, a.logout)
 	api.GET("/home", a.home)
+	api.GET("/models", a.xrwModels)
 	api.GET("/wallpapers", a.wallpapers)
 	api.GET("/wallpapers/:id", a.wallpaper)
 	api.PUT("/wallpapers/:id/interactions/:kind", requireUser, a.interaction)

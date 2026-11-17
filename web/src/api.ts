@@ -6,6 +6,7 @@ export type ImageFile = {
   height: number;
   bytes: number;
   mime: string;
+  external?: boolean;
 };
 export type Entity = {
   id: string;
@@ -30,11 +31,13 @@ export type Wallpaper = {
   sourceUrl: string;
   sourceMetrics: Record<string, number>;
   publishedAt: string;
+  archivedAt?: string;
   status: string;
   featured: boolean;
   author: Entity;
   channel: Entity;
   images: ImageFile[];
+  modelNames?: string[];
   likes: number;
   favorites: number;
   downloads: number;
@@ -105,7 +108,7 @@ export async function downloadFile(w: Wallpaper, img: ImageFile) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${w.title}.${img.mime.split("/")[1] || "jpg"}`;
+  a.download = `${w.title}.${(img.mime || blob.type).split("/")[1] || "jpg"}`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }

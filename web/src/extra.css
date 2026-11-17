@@ -2385,3 +2385,109 @@ form label.checkbox {
     transform: none !important;
   }
 }
+.orientation.source-filter select {
+  appearance: auto;
+  width: auto;
+  max-width: 105px;
+  padding: 5px 6px;
+  border: 1px solid var(--line, #e8eef7);
+  border-radius: 8px;
+}
+.orientation.source-filter select:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+.model-links {
+  align-items: center;
+}
+.model-links > span {
+  color: #64718d;
+  font-size: 13px;
+}
+.model-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 340px;
+  margin: 4px 0 18px;
+  padding: 0 12px;
+  border: 1px solid var(--line, #e8eef7);
+  border-radius: 10px;
+  background: white;
+  color: #64718d;
+}
+.model-search:focus-within {
+  border-color: var(--blue);
+}
+.model-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+.model-directory {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+  gap: 1px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.model-directory a {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--line, #e8eef7);
+  overflow-wrap: anywhere;
+}
+.model-directory a > span {
+  display: grid;
+  gap: 3px;
+}
+.model-cover {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f1f5fc;
+}
+.model-cover.image-fallback span {
+  display: none;
+}
+.model-profile {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 3vw, 24px);
+  margin: 0 0 22px;
+}
+.model-profile .model-cover {
+  width: clamp(68px, 14vw, 104px);
+  flex: none;
+}
+.model-profile h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: clamp(20px, 4vw, 30px);
+}
+.model-profile p {
+  margin: 4px 0 0;
+  color: #64718d;
+}
+.model-directory a:hover,
+.model-directory a:focus-visible {
+  color: var(--blue);
+}
+.model-directory small {
+  color: #64718d;
+}
+.album-sort {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}

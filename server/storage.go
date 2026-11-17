@@ -231,9 +231,17 @@ func (a *App) download(c *gin.Context) {
 		fail(c, 429, "下载过于频繁，请稍后重试")
 		return
 	}
-	var key, mime string
-	e := a.db.QueryRow(c, "SELECT m.storage_key,m.mime FROM media m JOIN wallpapers w ON w.id=m.wallpaper_id WHERE m.id=$1 AND w.id=$2 AND w.status='published'", c.Param("media"), c.Param("id")).Scan(&key, &mime)
+	var key, mime, externalURL string
+	e := a.db.QueryRow(c, `SELECT m.storage_key,m.mime,COALESCE(m.external_url,'') FROM media m
+		JOIN wallpapers w ON w.id=m.wallpaper_id JOIN wallpapers target ON target.id=$2
+		WHERE m.id=$1 AND w.status='published' AND target.status='published'
+		AND (w.id=target.id OR (m.external_url IS NOT NULL AND w.channel_id='xrw-album'
+		AND target.channel_id='xrw-album' AND w.album_group<>'' AND w.album_group=target.album_group))`, c.Param("media"), c.Param("id")).Scan(&key, &mime, &externalURL)
 	if !check(c, e) {
+		return
+	}
+	if externalURL != "" {
+		a.downloadXRW(c, externalURL)
 		return
 	}
 	path, e := a.storage.Path(key)
@@ -250,10 +258,14 @@ func (a *App) download(c *gin.Context) {
 	if !check(c, e) {
 		return
 	}
-	_, e = a.db.Exec(c, "INSERT INTO downloads(id,user_id,wallpaper_id,media_id) VALUES($1,$2,$3,$4)", id(), userID(c), c.Param("id"), c.Param("media"))
-	if !check(c, e) {
+	if !a.recordDownload(c) {
 		return
 	}
 	c.Header("Content-Disposition", `attachment; filename="wallplanet-`+c.Param("id")+filepath.Ext(key)+`"`)
 	c.DataFromReader(200, st.Size(), mime, file, nil)
+}
+
+func (a *App) recordDownload(c *gin.Context) bool {
+	_, e := a.db.Exec(c, "INSERT INTO downloads(id,user_id,wallpaper_id,media_id) VALUES($1,$2,$3,$4)", id(), userID(c), c.Param("id"), c.Param("media"))
+	return check(c, e)
 }

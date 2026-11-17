@@ -40,6 +40,18 @@ var jobSnapshotMigration string
 //go:embed migrations/005_batch_actor.sql
 var batchActorMigration string
 
+//go:embed migrations/006_external_media.sql
+var externalMediaMigration string
+
+//go:embed migrations/007_xrw_models.sql
+var xrwModelsMigration string
+
+//go:embed migrations/008_xrw_album_groups.sql
+var xrwAlbumGroupsMigration string
+
+//go:embed migrations/009_album_archive_time.sql
+var albumArchiveTimeMigration string
+
 type M = map[string]any
 type App struct {
 	db            *pgxpool.Pool
@@ -113,7 +125,7 @@ func migrate(ctx context.Context, db *pgxpool.Pool) error {
 	if _, e = tx.Exec(ctx, "CREATE TABLE IF NOT EXISTS schema_migrations(version integer PRIMARY KEY,applied_at timestamptz NOT NULL DEFAULT now())"); e != nil {
 		return e
 	}
-	for i, sql := range []string{migration, integrityMigration, itemRetryMigration, jobSnapshotMigration, batchActorMigration} {
+	for i, sql := range []string{migration, integrityMigration, itemRetryMigration, jobSnapshotMigration, batchActorMigration, externalMediaMigration, xrwModelsMigration, xrwAlbumGroupsMigration, albumArchiveTimeMigration} {
 		var applied bool
 		if e = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version=$1)", i+1).Scan(&applied); e != nil {
 			return e
@@ -194,6 +206,27 @@ func main() {
 	}
 	if command == "migrate" {
 		log.Print("migrations applied")
+		return
+	}
+	if command == "sync-xrw" {
+		if e = syncXRW(ctx, db, os.Args[2:]); e != nil {
+			log.Fatal(e)
+		}
+		return
+	}
+	if command == "classify-xrw" {
+		if e = classifyXRW(ctx, db); e != nil {
+			log.Fatal(e)
+		}
+		return
+	}
+	if command == "sync-xrw-archive" {
+		if len(os.Args) != 3 {
+			log.Fatal("usage: wallplanet sync-xrw-archive REPOSITORY.tar.gz")
+		}
+		if e = syncXRWArchive(ctx, db, os.Args[2]); e != nil {
+			log.Fatal(e)
+		}
 		return
 	}
 	if command == "create-admin" {

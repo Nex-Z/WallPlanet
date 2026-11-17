@@ -58,6 +58,9 @@ export function SmartImage({
       className={className}
       src={src}
       alt={alt}
+      referrerPolicy={
+        src?.startsWith("https://") ? "no-referrer" : rest.referrerPolicy
+      }
       onError={() => setBad(true)}
     />
   );
@@ -341,7 +344,7 @@ export function WallpaperCard({
         />
         <div className="card-shade">
           <span>{w.title}</span>
-          <small>{w.author.name}</small>
+          <small>{w.author.name || w.channel.name}</small>
         </div>
       </Link>
       <button
@@ -369,7 +372,11 @@ export function WallpaperCard({
         {number(w.favorites)}
       </button>
       <span className="card-resolution">
-        {img?.width >= 3840 || img?.height >= 3840 ? "4K" : "HD"}
+        {img?.external
+          ? "外部图源"
+          : img?.width >= 3840 || img?.height >= 3840
+            ? "4K"
+            : "HD"}
       </span>
     </article>
   );
@@ -420,6 +427,10 @@ export function Filters() {
     queryKey: ["entities", "topic"],
     queryFn: () => api<Page<Entity>>("/entities?kind=topic"),
   });
+  const channels = useQuery({
+    queryKey: ["entities", "channel"],
+    queryFn: () => api<Page<Entity>>("/entities?kind=channel"),
+  });
   const set = (k: string, v: string) =>
     setP((prev) => {
       const n = new URLSearchParams(prev);
@@ -461,6 +472,34 @@ export function Filters() {
             </button>
           ))}
       </div>
+      {(channels.data?.items.length ?? 0) > 1 && (
+        <label className="orientation source-filter">
+          <select
+            aria-label="图源"
+            value={p.get("channel") || ""}
+            onChange={(e) => {
+              const channel = e.target.value;
+              setP((prev) => {
+                const next = new URLSearchParams(prev);
+                if (channel) next.set("channel", channel);
+                else next.delete("channel");
+                if (channel === "xrw-album") {
+                  next.delete("topic");
+                  next.delete("orientation");
+                }
+                return next;
+              });
+            }}
+          >
+            <option value="">全部图源</option>
+            {channels.data?.items.map((channel) => (
+              <option key={channel.id} value={channel.id}>
+                {channel.id === "x" ? "X 采集" : channel.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="orientation">
         <SlidersHorizontal size={14} />
         <select
