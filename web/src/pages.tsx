@@ -365,7 +365,12 @@ export function DetailPage() {
       <div className="detail-layout">
         <div className="gallery">
           <div className="gallery-main">
-            <SmartImage src={img.url} alt={w.title} />
+            <SmartImage
+              src={img.url}
+              alt={w.title}
+              width={img.width || undefined}
+              height={img.height || undefined}
+            />
             <button
               className="gallery-expand"
               aria-label="全屏预览"
@@ -400,6 +405,8 @@ export function DetailPage() {
                   alt=""
                   loading="lazy"
                   decoding="async"
+                  width={m.width || undefined}
+                  height={m.height || undefined}
                 />
               </button>
             ))}

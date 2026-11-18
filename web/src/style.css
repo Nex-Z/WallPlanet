@@ -913,21 +913,28 @@ svg {
 }
 .detail-layout {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 34px;
+  grid-template-columns: minmax(0, 1fr) clamp(270px, 23vw, 340px);
+  align-items: start;
+  gap: clamp(20px, 2.5vw, 36px);
 }
 .gallery-main {
-  height: 510px;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
   border-radius: 10px;
   overflow: hidden;
   position: relative;
   background: #e9eff7;
 }
 .gallery-main > img {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: clamp(420px, calc(100svh - 130px), 1080px);
   object-fit: contain;
-  object-position: center;
+}
+.gallery-main > .image-fallback {
+  min-height: 240px;
 }
 .gallery-expand,
 .gallery-next {
@@ -948,11 +955,6 @@ svg {
 }
 .gallery-expand {
   top: 15px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.gallery-main:hover .gallery-expand {
-  opacity: 1;
 }
 .image-counter {
   position: absolute;
@@ -971,7 +973,11 @@ svg {
   overflow-x: auto;
 }
 .thumbnails button {
-  flex: 0 0 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 44px;
   height: 91px;
   border: 2px solid transparent;
   padding: 2px;
@@ -979,9 +985,24 @@ svg {
   overflow: hidden;
 }
 .thumbnails img {
+  display: block;
+  width: auto;
   height: 100%;
+  max-width: min(224px, 50vw);
   object-fit: contain;
   border-radius: 5px;
+}
+.thumbnails img:not([width]) {
+  aspect-ratio: auto 1;
+}
+.thumbnails .image-fallback {
+  width: auto;
+  min-height: 0;
+  aspect-ratio: 1;
+  border-radius: 5px;
+}
+.thumbnails .image-fallback span {
+  display: none;
 }
 .thumbnails button.selected {
   border-color: var(--blue);
@@ -990,6 +1011,7 @@ svg {
   font-size: 29px;
   line-height: 1.6;
   margin-bottom: 9px;
+  overflow-wrap: anywhere;
 }
 .quality-badge {
   display: inline-block;

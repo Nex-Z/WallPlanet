@@ -852,8 +852,8 @@ form label.checkbox {
   .hero {
     height: 355px;
   }
-  .gallery-main {
-    height: 545px;
+  .page:has(> .detail-layout) {
+    max-width: 1680px;
   }
 }
 @media (max-width: 1250px) {
@@ -950,13 +950,6 @@ form label.checkbox {
   }
   .subscription-list.compact .subscription-item {
     flex-direction: row;
-  }
-  .detail-layout {
-    gap: 25px;
-    grid-template-columns: 1.35fr 1fr;
-  }
-  .gallery-main {
-    height: 470px;
   }
   .detail-info h1 {
     font-size: 26px;
@@ -1095,11 +1088,8 @@ form label.checkbox {
     width: 55px;
   }
   .detail-layout {
-    grid-template-columns: 1.25fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 23px;
-  }
-  .gallery-main {
-    height: 410px;
   }
   .detail-info h1 {
     font-size: 23px;
@@ -1297,15 +1287,8 @@ form label.checkbox {
   .section-title h2 {
     font-size: 20px;
   }
-  .detail-layout {
-    grid-template-columns: 1fr;
-  }
-  .gallery-main {
-    height: 470px;
-  }
   .thumbnails button {
     height: 83px;
-    flex-basis: calc(25% - 7px);
   }
   .detail-info h1 {
     font-size: 28px;
@@ -1752,11 +1735,10 @@ form label.checkbox {
     gap: 19px;
   }
   .gallery-main {
-    height: 380px;
-    border-radius: 10px;
+    min-height: 140px;
+    margin-inline: -8px;
   }
   .gallery-expand {
-    opacity: 1;
     top: 12px;
     right: 12px;
     width: 31px;
@@ -1778,8 +1760,7 @@ form label.checkbox {
     margin-top: 8px;
   }
   .thumbnails button {
-    height: 58px;
-    flex-basis: calc(25% - 4px);
+    height: 64px;
     border-radius: 6px;
     padding: 1px;
   }
